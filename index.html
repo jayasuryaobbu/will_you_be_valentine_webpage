@@ -158,7 +158,7 @@
         <h1>Will You Be My Valentine?</h1>
         <div class="buttons">
             <button class="yes" onclick="accept()">Yes ❤️</button>
-            <button class="no" id="noBtn" onclick="handleNoClick()">No 😢</button>
+            <button class="no" id="noBtn">No 😢</button>
         </div>
         <div class="yes-message hidden" id="yesMsg">
             Yay! You're my Valentine forever! 💕
@@ -178,49 +178,42 @@
         }
         setInterval(createHeart, 300);
 
-        // Dodging No button - Works on BOTH desktop AND mobile touch
+        // FIXED: Touch-friendly dodging No button
         const noBtn = document.getElementById('noBtn');
         let posX = 0, posY = 0;
+        let startX = 0, startY = 0;
+        let hasMoved = false;
         let isTouchDevice = 'ontouchstart' in window;
 
         // Mouse events (desktop)
-        noBtn.addEventListener('mouseenter', dodgeButton);
-        noBtn.addEventListener('mouseleave', resetPosition);
-
-        // Touch events (mobile)
-        noBtn.addEventListener('touchstart', dodgeButton, { passive: false });
-        noBtn.addEventListener('touchmove', dodgeButton, { passive: false });
-        noBtn.addEventListener('touchend', resetPosition);
-
-        function dodgeButton(e) {
-            e.preventDefault();
-            
-            let clientX, clientY;
-            if (e.touches && e.touches[0]) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
-            
-            const rect = noBtn.getBoundingClientRect();
-            posX += (clientX - rect.left - rect.width / 2) > 0 ? 40 : -40;
-            posY += (clientY - rect.top - rect.height / 2) > 0 ? 40 : -40;
-            
+        noBtn.addEventListener('mouseenter', (e) => {
+            posX += (e.clientX - noBtn.getBoundingClientRect().left - 40) > 0 ? 40 : -40;
             posX = Math.max(-150, Math.min(150, posX));
-            posY = Math.max(-80, Math.min(80, posY));
-            
             noBtn.style.transform = `translate(${posX}px, ${posY}px)`;
-        }
+        });
 
-        function resetPosition() {
-            if (!isTouchDevice || noClickCount === 0) {
-                posX = 0;
-                posY = 0;
-                noBtn.style.transform = 'translate(0, 0)';
+        // Touch events (mobile) - FIXED VERSION
+        noBtn.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            hasMoved = false;
+        });
+
+        noBtn.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            
+            // Only dodge if finger moves more than 10px
+            if (!hasMoved && (Math.abs(currentX - startX) > 10 || Math.abs(currentY - startY) > 10)) {
+                hasMoved = true;
+                posX += (currentX - startX > 0) ? 40 : -40;
+                posY += (currentY - startY > 0) ? 20 : -20;
+                posX = Math.max(-150, Math.min(150, posX));
+                posY = Math.max(-80, Math.min(80, posY));
+                noBtn.style.transform = `translate(${posX}px, ${posY}px)`;
             }
-        }
+        }, { passive: false });
 
         // Your custom noTexts array (14 messages)
         const noTexts = [
@@ -241,6 +234,7 @@
         ];
         let noClickCount = 0;
 
+        // FIXED: Unified click handler for both desktop AND mobile
         function handleNoClick() {
             if (noClickCount < noTexts.length) {
                 noBtn.textContent = noTexts[noClickCount];
@@ -255,8 +249,22 @@
             }
         }
 
+        noBtn.addEventListener('click', handleNoClick);
+        noBtn.addEventListener('touchend', (e) => {
+            // Only trigger click if NO significant movement (tap vs drag)
+            if (!hasMoved) {
+                handleNoClick();
+            }
+            // Reset position after short delay
+            setTimeout(() => {
+                posX *= 0.8; // Gentle return
+                posY *= 0.8;
+                noBtn.style.transform = `translate(${posX}px, ${posY}px)`;
+            }, 200);
+        });
+
         function accept() {
-            document.querySelector('h1').innerHTML = 'I Love You!!!<br>My Wifey, Likhi 💖';
+            document.querySelector('h1').innerHTML = 'I Love You!<br>My Wifey, Likhi 💖';
             document.querySelector('.buttons').classList.add('hidden');
             document.getElementById('yesMsg').classList.remove('hidden');
         }
