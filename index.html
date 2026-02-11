@@ -75,23 +75,25 @@
             justify-content: center;
             flex-wrap: wrap;
             width: 100%;
+            position: relative;
+            z-index: 20;
         }
         button {
-            flex: 1;
-            min-width: 140px;
-            max-width: 160px;
             padding: 16px 24px;
             font-size: clamp(1rem, 4vw, 1.2rem);
             font-weight: 600;
             border: none;
             border-radius: 50px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             box-shadow: 0 12px 30px rgba(0,0,0,0.3);
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
         .yes {
+            flex: 1;
+            min-width: 140px;
+            max-width: 160px;
             background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
             color: white;
         }
@@ -102,7 +104,9 @@
         .no {
             background: linear-gradient(45deg, #54a0ff, #5aa7ff);
             color: white;
-            position: relative;
+            position: absolute;
+            z-index: 30;
+            min-width: 150px;
         }
         .no:active {
             transform: scale(0.95);
@@ -128,21 +132,23 @@
             body { padding: 15px; }
             .container { padding: 15px; max-width: 330px; }
             h1 { margin-bottom: 1.2rem; font-size: 2rem; }
-            button { 
+            .yes { 
                 padding: 14px 20px; 
                 min-width: 130px;
                 font-size: 1rem;
             }
             .buttons { gap: 10px; }
+            .no { min-width: 140px; }
         }
         @media screen and (min-width: 376px) and (max-width: 390px) {
             .container { max-width: 340px; }
             h1 { font-size: 2.2rem; }
-            button { 
+            .yes { 
                 padding: 15px 22px; 
                 min-width: 135px;
                 font-size: 1.05rem;
             }
+            .no { min-width: 145px; }
         }
         @supports(padding: max(0px)) {
             body {
@@ -178,43 +184,9 @@
         }
         setInterval(createHeart, 300);
 
-        // FIXED: Touch-friendly dodging No button
+        // NEW: Random teleporting No button
         const noBtn = document.getElementById('noBtn');
-        let posX = 0, posY = 0;
-        let startX = 0, startY = 0;
-        let hasMoved = false;
-        let isTouchDevice = 'ontouchstart' in window;
-
-        // Mouse events (desktop)
-        noBtn.addEventListener('mouseenter', (e) => {
-            posX += (e.clientX - noBtn.getBoundingClientRect().left - 40) > 0 ? 40 : -40;
-            posX = Math.max(-150, Math.min(150, posX));
-            noBtn.style.transform = `translate(${posX}px, ${posY}px)`;
-        });
-
-        // Touch events (mobile) - FIXED VERSION
-        noBtn.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            hasMoved = false;
-        });
-
-        noBtn.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            const currentX = e.touches[0].clientX;
-            const currentY = e.touches[0].clientY;
-            
-            // Only dodge if finger moves more than 10px
-            if (!hasMoved && (Math.abs(currentX - startX) > 10 || Math.abs(currentY - startY) > 10)) {
-                hasMoved = true;
-                posX += (currentX - startX > 0) ? 40 : -40;
-                posY += (currentY - startY > 0) ? 20 : -20;
-                posX = Math.max(-150, Math.min(150, posX));
-                posY = Math.max(-80, Math.min(80, posY));
-                noBtn.style.transform = `translate(${posX}px, ${posY}px)`;
-            }
-        }, { passive: false });
-
+        
         // Your custom noTexts array (14 messages)
         const noTexts = [
             "Are you sure? 🤔",
@@ -234,39 +206,60 @@
         ];
         let noClickCount = 0;
 
-        // FIXED: Unified click handler for both desktop AND mobile
+        function getRandomPosition() {
+            const rect = noBtn.getBoundingClientRect();
+            const buttonWidth = rect.width;
+            const buttonHeight = rect.height;
+            const maxX = window.innerWidth - buttonWidth - 20; // 20px padding
+            const maxY = window.innerHeight - buttonHeight - 20;
+            
+            const randomX = Math.random() * maxX;
+            const randomY = Math.random() * maxY;
+            
+            return { x: randomX, y: randomY };
+        }
+
+        function teleportNoButton() {
+            const pos = getRandomPosition();
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = pos.x + 'px';
+            noBtn.style.top = '20px'; // Always some top margin
+            noBtn.style.transform = 'translate(0, 0)';
+            
+            // Bounce animation
+            noBtn.animate([
+                { transform: 'scale(0.8) translateY(20px)', opacity: 0.7 },
+                { transform: 'scale(1) translateY(0)', opacity: 1 }
+            ], {
+                duration: 500,
+                easing: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+            });
+        }
+
         function handleNoClick() {
             if (noClickCount < noTexts.length) {
                 noBtn.textContent = noTexts[noClickCount];
                 noClickCount++;
+                teleportNoButton(); // Teleport to random position
             } else {
                 alert('Just kidding! Try Yes! 😉');
                 noClickCount = 0;
                 noBtn.textContent = 'No 😢';
-                posX = 0;
-                posY = 0;
-                noBtn.style.transform = 'translate(0, 0)';
+                // Return to original position
+                noBtn.style.position = 'relative';
+                noBtn.style.left = 'auto';
+                noBtn.style.top = 'auto';
             }
         }
 
+        // Add click handler to No button
         noBtn.addEventListener('click', handleNoClick);
-        noBtn.addEventListener('touchend', (e) => {
-            // Only trigger click if NO significant movement (tap vs drag)
-            if (!hasMoved) {
-                handleNoClick();
-            }
-            // Reset position after short delay
-            setTimeout(() => {
-                posX *= 0.8; // Gentle return
-                posY *= 0.8;
-                noBtn.style.transform = `translate(${posX}px, ${posY}px)`;
-            }, 200);
-        });
 
         function accept() {
             document.querySelector('h1').innerHTML = 'I Love You!<br>My Wifey, Likhi 💖';
             document.querySelector('.buttons').classList.add('hidden');
             document.getElementById('yesMsg').classList.remove('hidden');
+            noBtn.style.display = 'none'; // Hide No button completely
         }
     </script>
 </body>
