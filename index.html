@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will You Be My Valentine?</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(-45deg, #ff6b6b, #feca57, #ff9ff3, #54a0ff);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            overflow: hidden;
+            position: relative;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .hearts {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .heart {
+            position: absolute;
+            font-size: clamp(16px, 4vw, 20px);
+            color: rgba(255,255,255,0.9);
+            animation: float 6s infinite linear;
+        }
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+        .container {
+            text-align: center;
+            z-index: 10;
+            position: relative;
+            width: 100%;
+            max-width: 350px;
+            padding: 20px;
+        }
+        h1 {
+            font-size: clamp(1.8rem, 8vw, 2.8rem);
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 0 20px rgba(255,255,255,0.8);
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(255,255,255,0.8), 0 0 30px #ff6b6b, 0 0 40px #ff6b6b; }
+            to { text-shadow: 0 0 20px rgba(255,255,255,0.8), 0 0 40px #feca57, 0 0 50px #feca57; }
+        }
+        .buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        button {
+            flex: 1;
+            min-width: 140px;
+            max-width: 160px;
+            padding: 16px 24px;
+            font-size: clamp(1rem, 4vw, 1.2rem);
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .yes {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            color: white;
+        }
+        .yes:hover, .yes:active {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(255,107,107,0.6);
+        }
+        .no {
+            background: linear-gradient(45deg, #54a0ff, #5aa7ff);
+            color: white;
+            position: relative;
+        }
+        .no:active {
+            transform: scale(0.95);
+        }
+        .hidden {
+            display: none !important;
+        }
+        .yes-message {
+            margin-top: 2rem;
+            font-size: clamp(1.2rem, 5vw, 1.5rem);
+            font-weight: 500;
+            color: white;
+            text-shadow: 0 0 10px rgba(255,255,255,0.8);
+            animation: bounce 1s infinite;
+            line-height: 1.3;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        @media screen and (max-width: 375px) {
+            body { padding: 15px; }
+            .container { padding: 15px; max-width: 330px; }
+            h1 { margin-bottom: 1.2rem; font-size: 2rem; }
+            button { 
+                padding: 14px 20px; 
+                min-width: 130px;
+                font-size: 1rem;
+            }
+            .buttons { gap: 10px; }
+        }
+        @media screen and (min-width: 376px) and (max-width: 390px) {
+            .container { max-width: 340px; }
+            h1 { font-size: 2.2rem; }
+            button { 
+                padding: 15px 22px; 
+                min-width: 135px;
+                font-size: 1.05rem;
+            }
+        }
+        @supports(padding: max(0px)) {
+            body {
+                padding-bottom: env(safe-area-inset-bottom);
+                padding-top: env(safe-area-inset-top);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hearts" id="hearts"></div>
+    <div class="container">
+        <h1>Will You Be My Valentine?</h1>
+        <div class="buttons">
+            <button class="yes" onclick="accept()">Yes ❤️</button>
+            <button class="no" id="noBtn" onclick="handleNoClick()">No 😢</button>
+        </div>
+        <div class="yes-message hidden" id="yesMsg">
+            Yay! You're my Valentine forever! 💕
+        </div>
+    </div>
+
+    <script>
+        // Floating hearts
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            heart.innerHTML = '💖';
+            heart.style.left = Math.random() * 100 + '%';
+            heart.style.animationDuration = (Math.random() * 3 + 3) + 's';
+            document.getElementById('hearts').appendChild(heart);
+            setTimeout(() => heart.remove(), 6000);
+        }
+        setInterval(createHeart, 300);
+
+        // Dodging No button - Works on BOTH desktop AND mobile touch
+        const noBtn = document.getElementById('noBtn');
+        let posX = 0, posY = 0;
+        let isTouchDevice = 'ontouchstart' in window;
+
+        // Mouse events (desktop)
+        noBtn.addEventListener('mouseenter', dodgeButton);
+        noBtn.addEventListener('mouseleave', resetPosition);
+
+        // Touch events (mobile)
+        noBtn.addEventListener('touchstart', dodgeButton, { passive: false });
+        noBtn.addEventListener('touchmove', dodgeButton, { passive: false });
+        noBtn.addEventListener('touchend', resetPosition);
+
+        function dodgeButton(e) {
+            e.preventDefault();
+            
+            let clientX, clientY;
+            if (e.touches && e.touches[0]) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            
+            const rect = noBtn.getBoundingClientRect();
+            posX += (clientX - rect.left - rect.width / 2) > 0 ? 40 : -40;
+            posY += (clientY - rect.top - rect.height / 2) > 0 ? 40 : -40;
+            
+            posX = Math.max(-150, Math.min(150, posX));
+            posY = Math.max(-80, Math.min(80, posY));
+            
+            noBtn.style.transform = `translate(${posX}px, ${posY}px)`;
+        }
+
+        function resetPosition() {
+            if (!isTouchDevice || noClickCount === 0) {
+                posX = 0;
+                posY = 0;
+                noBtn.style.transform = 'translate(0, 0)';
+            }
+        }
+
+        // Your custom noTexts array (14 messages)
+        const noTexts = [
+            "Are you sure? 🤔",
+            "Really? 😏",
+            "Think again! 💭",
+            "No way! 😲",
+            "What if I asked really nice?",
+            "Come on! 🥺",
+            "Pretty, please? 🙏",
+            "You know the answer ❤️",
+            "Don't break my heart 💔",
+            "May be with my Biryani?",
+            "How about a kiss?",
+            "Please Pookieee",
+            "Be mine! Pleaseeee 💖",
+            ":((((( "
+        ];
+        let noClickCount = 0;
+
+        function handleNoClick() {
+            if (noClickCount < noTexts.length) {
+                noBtn.textContent = noTexts[noClickCount];
+                noClickCount++;
+            } else {
+                alert('Just kidding! Try Yes! 😉');
+                noClickCount = 0;
+                noBtn.textContent = 'No 😢';
+                posX = 0;
+                posY = 0;
+                noBtn.style.transform = 'translate(0, 0)';
+            }
+        }
+
+        function accept() {
+            document.querySelector('h1').innerHTML = 'I Love You!!!<br>My Wifey, Likhi 💖';
+            document.querySelector('.buttons').classList.add('hidden');
+            document.getElementById('yesMsg').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
