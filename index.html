@@ -61,7 +61,7 @@
             font-weight: 700;
             color: white;
             text-shadow: 0 0 20px rgba(255,255,255,0.8);
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
             line-height: 1.2;
             animation: glow 2s ease-in-out infinite alternate;
         }
@@ -69,19 +69,41 @@
             from { text-shadow: 0 0 20px rgba(255,255,255,0.8), 0 0 30px #ff6b6b, 0 0 40px #ff6b6b; }
             to { text-shadow: 0 0 20px rgba(255,255,255,0.8), 0 0 40px #feca57, 0 0 50px #feca57; }
         }
-        .buttons {
+        .buttons-container {
             display: flex;
-            gap: 12px;
             justify-content: center;
-            flex-wrap: wrap;
-            width: 100%;
-            position: relative;
-            z-index: 20;
+            gap: 20px;
+            margin-bottom: 2rem;
         }
-        button {
+        .yes-btn {
+            padding: 16px 32px;
+            font-size: clamp(1rem, 4vw, 1.2rem);
+            font-weight: 600;
+            min-width: 140px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            color: white;
+        }
+        .yes-btn:hover, .yes-btn:active {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(255,107,107,0.6);
+        }
+        #noBtn {
+            display: none; /* Initially hidden */
+        }
+        .no {
+            position: relative;
+            z-index: 30;
             padding: 16px 24px;
             font-size: clamp(1rem, 4vw, 1.2rem);
             font-weight: 600;
+            min-width: 150px;
             border: none;
             border-radius: 50px;
             cursor: pointer;
@@ -89,24 +111,8 @@
             box-shadow: 0 12px 30px rgba(0,0,0,0.3);
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
-        }
-        .yes {
-            flex: 1;
-            min-width: 140px;
-            max-width: 160px;
-            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
-            color: white;
-        }
-        .yes:hover, .yes:active {
-            transform: scale(1.05);
-            box-shadow: 0 15px 40px rgba(255,107,107,0.6);
-        }
-        .no {
             background: linear-gradient(45deg, #54a0ff, #5aa7ff);
             color: white;
-            position: absolute;
-            z-index: 30;
-            min-width: 150px;
         }
         .no:active {
             transform: scale(0.95);
@@ -128,27 +134,17 @@
             40% { transform: translateY(-10px); }
             60% { transform: translateY(-5px); }
         }
-        @media screen and (max-width: 375px) {
+        /* Combined styles for smaller phones (e.g., iPhone 12 mini & iPhone 13) */
+        @media screen and (max-width: 390px) {
             body { padding: 15px; }
-            .container { padding: 15px; max-width: 330px; }
-            h1 { margin-bottom: 1.2rem; font-size: 2rem; }
-            .yes { 
-                padding: 14px 20px; 
-                min-width: 130px;
-                font-size: 1rem;
-            }
-            .buttons { gap: 10px; }
-            .no { min-width: 140px; }
-        }
-        @media screen and (min-width: 376px) and (max-width: 390px) {
-            .container { max-width: 340px; }
-            h1 { font-size: 2.2rem; }
-            .yes { 
+            .container { padding: 15px; max-width: 340px; }
+            h1 { margin-bottom: 1.5rem; font-size: 2.2rem; }
+            .yes-btn, .no { 
                 padding: 15px 22px; 
                 min-width: 135px;
                 font-size: 1.05rem;
             }
-            .no { min-width: 145px; }
+            .buttons-container { gap: 15px; }
         }
         @supports(padding: max(0px)) {
             body {
@@ -162,9 +158,9 @@
     <div class="hearts" id="hearts"></div>
     <div class="container">
         <h1>Will You Be My Valentine?</h1>
-        <div class="buttons">
-            <button class="yes" onclick="accept()">Yes ❤️</button>
-            <button class="no" id="noBtn">No 😢</button>
+        <div class="buttons-container">
+            <button class="yes-btn" onclick="accept()">Yes ❤️</button>
+            <button id="noBtn" class="no">No 😢</button>
         </div>
         <div class="yes-message hidden" id="yesMsg">
             Yay! You're my Valentine forever! 💕
@@ -184,9 +180,12 @@
         }
         setInterval(createHeart, 300);
 
-        // NEW: Random teleporting No button
+        // FIXED: Perfect initial button placement
         const noBtn = document.getElementById('noBtn');
         
+        // Show No button and position it perfectly initially
+        noBtn.style.display = 'block';
+
         // Your custom noTexts array (14 messages)
         const noTexts = [
             "Are you sure? 🤔",
@@ -206,27 +205,30 @@
         ];
         let noClickCount = 0;
 
-        function getRandomPosition() {
-            const rect = noBtn.getBoundingClientRect();
-            const buttonWidth = rect.width;
-            const buttonHeight = rect.height;
-            const maxX = window.innerWidth - buttonWidth - 20; // 20px padding
-            const maxY = window.innerHeight - buttonHeight - 20;
+        function getSafeRandomPosition() {
+            const buttonRect = noBtn.getBoundingClientRect();
+            const buttonWidth = buttonRect.width;
+            const buttonHeight = buttonRect.height;
             
-            const randomX = Math.random() * maxX;
-            const randomY = Math.random() * maxY;
+            // Safe zones: avoid center container area completely
+            const safeTop = window.innerHeight * 0.15 + buttonHeight; // Skip top 15%
+            const safeBottom = window.innerHeight - buttonHeight - 20; // 20px from bottom
+            const safeLeft = 20 + buttonWidth; // 20px from left
+            const safeRight = window.innerWidth - buttonWidth - 20; // 20px from right
+            
+            const randomX = safeLeft + Math.random() * (safeRight - safeLeft);
+            const randomY = safeTop + Math.random() * (safeBottom - safeTop);
             
             return { x: randomX, y: randomY };
         }
 
         function teleportNoButton() {
-            const pos = getRandomPosition();
             noBtn.style.position = 'fixed';
+            const pos = getSafeRandomPosition();
             noBtn.style.left = pos.x + 'px';
-            noBtn.style.top = '20px'; // Always some top margin
-            noBtn.style.transform = 'translate(0, 0)';
+            noBtn.style.top = pos.y + 'px';
             
-            // Bounce animation
+            // Smooth bounce animation
             noBtn.animate([
                 { transform: 'scale(0.8) translateY(20px)', opacity: 0.7 },
                 { transform: 'scale(1) translateY(0)', opacity: 1 }
@@ -240,26 +242,26 @@
             if (noClickCount < noTexts.length) {
                 noBtn.textContent = noTexts[noClickCount];
                 noClickCount++;
-                teleportNoButton(); // Teleport to random position
+                teleportNoButton();
             } else {
                 alert('Just kidding! Try Yes! 😉');
                 noClickCount = 0;
                 noBtn.textContent = 'No 😢';
-                // Return to original position
+                // Return to right of Yes button
                 noBtn.style.position = 'relative';
                 noBtn.style.left = 'auto';
                 noBtn.style.top = 'auto';
+                noBtn.style.transform = 'none';
             }
         }
 
-        // Add click handler to No button
         noBtn.addEventListener('click', handleNoClick);
 
         function accept() {
             document.querySelector('h1').innerHTML = 'I Love You!<br>My Wifey, Likhi 💖';
-            document.querySelector('.buttons').classList.add('hidden');
+            document.querySelector('.buttons-container').style.display = 'none';
             document.getElementById('yesMsg').classList.remove('hidden');
-            noBtn.style.display = 'none'; // Hide No button completely
+            noBtn.style.display = 'none';
         }
     </script>
 </body>
