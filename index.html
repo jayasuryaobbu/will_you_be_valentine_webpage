@@ -206,19 +206,43 @@
         let noClickCount = 0;
 
         function getSafeRandomPosition() {
-            const buttonRect = noBtn.getBoundingClientRect();
-            const buttonWidth = buttonRect.width;
-            const buttonHeight = buttonRect.height;
-            
-            // Safe zones: avoid center container area completely
-            const safeTop = window.innerHeight * 0.15 + buttonHeight; // Skip top 15%
-            const safeBottom = window.innerHeight - buttonHeight - 20; // 20px from bottom
-            const safeLeft = 20 + buttonWidth; // 20px from left
-            const safeRight = window.innerWidth - buttonWidth - 20; // 20px from right
-            
-            const randomX = safeLeft + Math.random() * (safeRight - safeLeft);
-            const randomY = safeTop + Math.random() * (safeBottom - safeTop);
-            
+            const h1Rect = document.querySelector('h1').getBoundingClientRect();
+            const yesBtnRect = document.querySelector('.yes-btn').getBoundingClientRect();
+            const noBtnRect = noBtn.getBoundingClientRect();
+
+            const buttonWidth = noBtnRect.width;
+            const buttonHeight = noBtnRect.height;
+
+            let randomX, randomY;
+            let isOverlapping;
+            let safetyCounter = 0; // Prevents infinite loops
+
+            const restrictedAreas = [h1Rect, yesBtnRect];
+
+            do {
+                // Generate random position within the viewport, with a 20px padding from edges
+                randomX = 20 + Math.random() * (window.innerWidth - buttonWidth - 40);
+                randomY = 20 + Math.random() * (window.innerHeight - buttonHeight - 40);
+
+                const proposedRect = {
+                    left: randomX,
+                    right: randomX + buttonWidth,
+                    top: randomY,
+                    bottom: randomY + buttonHeight
+                };
+
+                isOverlapping = restrictedAreas.some(area => {
+                    // Add padding to the restricted area for better spacing
+                    const paddedArea = {
+                        left: area.left - 20, right: area.right + 20,
+                        top: area.top - 20, bottom: area.bottom + 20
+                    };
+                    return (proposedRect.left < paddedArea.right && proposedRect.right > paddedArea.left && proposedRect.top < paddedArea.bottom && proposedRect.bottom > paddedArea.top);
+                });
+
+                safetyCounter++;
+            } while (isOverlapping && safetyCounter < 100);
+
             return { x: randomX, y: randomY };
         }
 
