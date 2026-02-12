@@ -157,7 +157,7 @@
 <body>
     <div class="hearts" id="hearts"></div>
     <div class="container">
-        <h1>Will You Be My Valentine?</h1>
+        <h1>Will You Be My Valentine? 🌹</h1>
         <div class="buttons-container">
             <button class="yes-btn" onclick="accept()">Yes ❤️</button>
             <button id="noBtn" class="no">No 😢</button>
@@ -192,16 +192,16 @@
             "Really? 😏",
             "Think again! 💭",
             "No way! 😲",
-            "What if I asked really nice?",
+            "What if I asked really nice? 👉👈",
             "Come on! 🥺",
             "Pretty, please? 🙏",
             "You know the answer ❤️",
             "Don't break my heart 💔",
-            "May be with my Biryani?",
-            "How about a kiss?",
-            "Please Pookieee",
+            "May be with my Biryani? 🥘",
+            "How about a kiss? 😘",
+            "Please Pookieee 🥺",
             "Be mine! Pleaseeee 💖",
-            ":((((( "
+            "I am Crying, :((((( 😭"
         ];
         let noClickCount = 0;
 
@@ -276,7 +276,7 @@
                 noClickCount++;
                 teleportNoButton();
             } else {
-                alert('Just kidding! Try Yes! 😉');
+                alert('I Can\'t Leave You! Try Yes Please! 😔');
                 noClickCount = 0;
                 noBtn.textContent = 'No 😢';
                 
@@ -295,7 +295,7 @@
         noBtn.addEventListener('click', handleNoClick);
 
         function accept() {
-            document.querySelector('h1').innerHTML = 'I Love You!<br>My Wifey, Likhi 💖';
+            document.querySelector('h1').innerHTML = 'I Love You 💖!<br>My Wifey, Likhi 😘';
             document.querySelector('.buttons-container').style.display = 'none';
             document.getElementById('yesMsg').classList.remove('hidden');
             noBtn.style.display = 'none';
