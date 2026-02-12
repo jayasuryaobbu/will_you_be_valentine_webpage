@@ -264,6 +264,14 @@
 
         function handleNoClick() {
             if (noClickCount < noTexts.length) {
+                // Create a spacer to keep the Yes button in place when No button leaves the flow
+                if (noBtn.style.position !== 'fixed') {
+                    const spacer = document.createElement('div');
+                    spacer.id = 'no-btn-spacer';
+                    spacer.style.width = noBtn.offsetWidth + 'px';
+                    spacer.style.height = noBtn.offsetHeight + 'px';
+                    noBtn.parentNode.insertBefore(spacer, noBtn);
+                }
                 noBtn.textContent = noTexts[noClickCount];
                 noClickCount++;
                 teleportNoButton();
@@ -271,6 +279,11 @@
                 alert('Just kidding! Try Yes! 😉');
                 noClickCount = 0;
                 noBtn.textContent = 'No 😢';
+                
+                // Remove spacer to reset layout
+                const spacer = document.getElementById('no-btn-spacer');
+                if (spacer) spacer.remove();
+
                 // Return to right of Yes button
                 noBtn.style.position = 'relative';
                 noBtn.style.left = 'auto';
