@@ -134,6 +134,14 @@
             40% { transform: translateY(-10px); }
             60% { transform: translateY(-5px); }
         }
+        .response-img {
+            width: 100%;
+            max-width: 280px;
+            height: auto;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
         /* Combined styles for smaller phones (e.g., iPhone 12 mini & iPhone 13) */
         @media screen and (max-width: 390px) {
             body { padding: 15px; }
@@ -162,6 +170,7 @@
             <button class="yes-btn" onclick="accept()">Yes ❤️</button>
             <button id="noBtn" class="no">No 😢</button>
         </div>
+        <img id="valentineImg" class="response-img hidden" src="img.png" alt="Us">
         <div class="yes-message hidden" id="yesMsg">
             Yay! You're my Valentine forever! 💕
         </div>
@@ -298,6 +307,7 @@
             document.querySelector('h1').innerHTML = 'I Love You 💖!<br>My Wifey, Likhi 😘';
             document.querySelector('.buttons-container').style.display = 'none';
             document.getElementById('yesMsg').classList.remove('hidden');
+            document.getElementById('valentineImg').classList.remove('hidden');
             noBtn.style.display = 'none';
         }
     </script>
